@@ -1,0 +1,85 @@
+Vagrant.configure("2") do |config|
+
+config.vm.define "kaspar-ansible" do |ansible|
+  ansible.vm.box = "generic/debian12"
+  ansible.vm.network "public_network"
+  ansible.vm.network "private_network", ip: "10.10.10.131", virtualbox__intnet: "ansible_kaspar"
+  ansible.vm.hostname = "kaspar-ansible"
+  ansible.vm.synced_folder "./ansible_data", "/vagrant_data"
+  ansible.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--cpus", "2"]
+	vb.name = "kaspar-ansible"
+    end
+  ansible.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y git ansible sshpass yamllint ansible-lint snmpd tmux mc wget tree git
+  SHELL
+  end
+config.vm.define "kaspar-ubuntu" do |ubuntu|
+  ubuntu.vm.box = "bento/ubuntu-24.04"
+  ubuntu.vm.network "public_network"
+  ubuntu.vm.network "private_network", ip: "10.10.10.132", virtualbox__intnet: "ansible_kaspar"
+  ubuntu.vm.hostname = "kaspar-ubuntu"
+  ubuntu.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--cpus", "2"]
+	vb.name = "kaspar-ubuntu"
+    end
+	ubuntu.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install snmpd snmp libsnmp-dev tmux mc wget tree git 
+  SHELL
+  end
+config.vm.define "kaspar-dockerhost" do |dockerhost|
+  dockerhost.vm.box = "generic/debian12"
+  dockerhost.vm.network "public_network"
+  dockerhost.vm.network "private_network", ip: "10.10.10.130", virtualbox__intnet: "ansible_kaspar"
+  dockerhost.vm.hostname = "kaspar-dockerhost"
+  dockerhost.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "8192"]
+    vb.customize ["modifyvm", :id, "--cpus", "4"]
+	vb.name = "kaspar-dockerhost"
+    end
+		dockerhost.vm.provision "shell", inline: <<-SHELL
+          apt-get update
+      apt-get install -y git snmpd tmux mc wget tree
+	  sudo apt install apt-transport-https ca-certificates curl gnupg
+	  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker.gpg
+	  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+	  sudo apt update
+	  sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+	  sudo usermod -aG docker vagrant
+  SHELL
+  end
+config.vm.define "kaspar-centos" do |centos|
+  centos.vm.box = "eurolinux-vagrant/centos-stream-9"
+  centos.vm.network "public_network"
+  centos.vm.network "private_network", ip: "10.10.10.133", virtualbox__intnet: "ansible_kaspar"
+  centos.vm.hostname = "kaspar-centos"
+  centos.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--cpus", "2"]
+	vb.name = "kaspar-centos"
+    end
+		centos.vm.provision "shell", inline: <<-SHELL
+    yum update
+    yum install net-snmpd net-snmp-utils tmux mc wget tree git 
+  SHELL
+  end
+config.vm.define "kaspar-opensuse" do |opensuse|
+  openuse.vm.box = "opensuse/Leap-15.2.x86_64"
+  openuse.vm.network "public_network"
+  openuse.vm.network "private_network", ip: "10.10.10.134", virtualbox__intnet: "ansible_kaspar"
+  openuse.vm.hostname = "kaspar-opensuse"
+  openuse.vm.provider :virtualbox do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+    vb.customize ["modifyvm", :id, "--cpus", "2"]
+	vb.name = "kaspar-openuse"
+    end
+		openuse.vm.provision "shell", inline: <<-SHELL
+    zypper update
+    zypper install net-snmp tmux mc wget tree git 
+  SHELL
+  end
+end
